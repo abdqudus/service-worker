@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      // First step is to register the service worker
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker
+          .register("./serviceworker.js")
+          .then((registration) => console.log("Success", registration.scope))
+          .catch(() => console.log("error"));
+        console.log("All done");
+      }
+    </script>
+  </body>
+</html>
