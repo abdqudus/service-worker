@@ -1,11 +1,17 @@
-const version = "V0.01";
+const version = "V0.06";
 const staticCacheName = version + "staticfiles";
+const imageCacheName = "images";
+const cacheList = [staticCacheName, imageCacheName];
 
 addEventListener("install", (installEvnt) => {
   skipWaiting();
   installEvnt.waitUntil(
     caches.open(staticCacheName).then((staticCache) => {
-      return staticCache.addAll(["./index.js", "./style.css"]);
+      return staticCache.addAll([
+        "./index.js",
+        "./style.css",
+        "./offline.html",
+      ]);
       //  NB: WHen there are too much files to cache, the browser
       // might not cache anything, so you can divide tje operation in two
       // the must cache and nice to cache.
@@ -20,9 +26,9 @@ addEventListener("activate", (activateEvnt) => {
       .keys()
       .then((cacheNames) => {
         return Promise.all(
-          cacheNames.map((cachename) => {
-            if (cachename !== staticCacheName) {
-              return caches.delete(cachename);
+          cacheNames.map((cacheName) => {
+            if (!cacheList.includes(cacheName)) {
+              return caches.delete(cacheName);
             }
           })
         );
@@ -32,12 +38,55 @@ addEventListener("activate", (activateEvnt) => {
       })
   );
 });
+// You can model your fetch event listener anyhow you want depending on the nature of your webpage
+// The midel here is that of a website that frequently changes it web content but rarely changes images
 addEventListener("fetch", (fetchEvt) => {
   const req = fetchEvt.request;
+  if (req.headers.get("Accept").includes("text/html")) {
+    // if the requested file is an HTML file"
+    fetchEvt.respondWith(
+      fetch(req) //fetch from server or do whatever you always do
+        .catch((err) => {
+          // If the fetch fails, return the default offline page
+          return caches.match("./offline.html");
+        })
+    );
+    return;
+  }
+  if (req.headers.get("Accept").includes("image")) {
+    // If requested file is an image
+    fetchEvt.respondWith(
+      caches
+        .match(req) //Find in cache
+        .then((resFromCache) => {
+          if (resFromCache) {
+            // If found return the image
+            return resFromCache;
+          }
+          //   If not do a network fetch
+          return fetch(req).then((resFromFetch) => {
+            // since response can only be used once, saving the response
+            //  in the cache means the user won't get the image if you cache first
+            // Also, the cache would not be possible if response is first sent to user.
+            const copy = resFromFetch.clone();
+            // For this reason, you clone the response
+            fetchEvt.waitUntil(
+              // To prevent unwanted issues, you can wait to cache the copy b4 sending the original to the user
+              caches
+                .open(imageCacheName)
+                .then((imgCache) => imgCache.put(req, copy))
+            );
+            return resFromFetch;
+            // Return response to user
+          });
+        })
+    );
+    return;
+  }
   fetchEvt.respondWith(
+    // FOr every other requests, follow the logic below
     caches.match(req).then((cacheRes) => {
-      if (cacheRes !== null) {
-        // We dd this check cos a cache return null when no item matches the request
+      if (cacheRes) {
         return cacheRes;
       }
       return fetch(req);

@@ -32,3 +32,11 @@
 - retrieve files from caches
 
 ##### Where the HTTP cache gives us just one place to cache all resources, the cache API allows us to be creative in ways we organize our caches.
+
+# 27/12/2023
+
+###### I learnt the importance of strategizing when writing a service worker code.
+
+###### Every service worker must be written to fit the requirement of the webpage.
+
+###### In essence, there is no one shoe fits all
