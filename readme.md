@@ -40,3 +40,15 @@
 ###### Every service worker must be written to fit the requirement of the webpage.
 
 ###### In essence, there is no one shoe fits all
+
+# 28/12/2023
+
+- ###### Space is limited, so it won't be a good practice to store too much things on a user's browser.
+- ###### For this reason, it is a good practice to always clean up the cache by removing relatively less requested resources.
+- ###### Since the pattern followed in this tutorial is to always look in the cache, fetch a new version and then save the new version, relatively old files that are not requested for are always the first items in the caache array.
+- ###### So, we can write a utility function to clean up the cache from time to time.
+- ###### The best time to call this function is now the focus.
+- ###### It shouldn't be called in the activate event, cos it only runs when a visitor first visits our webpage. SO if the person doesnt leave the webpage for long, the person might get a stale version.
+- ###### Another option is when any fetch event is fired, but this can lead to complications if files are also stored in the cache when this event fires.
+- ###### 
+
